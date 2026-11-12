@@ -580,25 +580,20 @@
                         </button>
                     </div>
 
-                    <textarea id="sourceInput" class="translator-input" placeholder="Type here... e.g. Hi, I'm Carl! Are you a boy or a girl? Bye!"></textarea>
+                    <textarea id="sourceInput" class="translator-input" placeholder="Type here... e.g. One, Two, Three! Are you a boy, girl, or nonbinary?"></textarea>
 
                     <div class="card-footer">
                         <div class="sample-group">
                             <span>Samples:</span>
                             <button type="button" class="sample-chip"
-                                data-en="Hi, I'm Carl!"
-                                data-yn="eeeeeeeeeeeeeeello, piep pip popopeeeeeeeeeepa!">
-                                Greeting
+                                data-en="One, Two, Three!"
+                                data-yn="ooooooe, pops, pipepepes!">
+                                Numbers
                             </button>
                             <button type="button" class="sample-chip"
-                                data-en="You're Joba and I am Yar."
-                                data-yn="eepaap pip eeeeeeeeeeeapapapapapapapapapapa and piep pip paeeeeeeeeeeeeeeeeeeeeeeeeeeeee.">
-                                Intro
-                            </button>
-                            <button type="button" class="sample-chip"
-                                data-en="English or Yarnglish? Bye!"
-                                data-yn="eeeeeenglish or paeeengliish? byeeeeeeee apapapa!">
-                                Languages
+                                data-en="Boy, girl, or nonbinary?"
+                                data-yn="poi, gipipi, or puar?">
+                                Genders
                             </button>
                         </div>
                     </div>
@@ -690,13 +685,16 @@
                 "boy": "poi",
                 "girl": "gipipi",
                 "english": "eeeeeenglish",
-                "yarnglish": "paeeengliish"
+                "yarnglish": "paeeengliish",
+                "one": "ooooooe",
+                "two": "pops",
+                "three": "pipepepes",
+                "nonbinary": "puar"
             };
 
             /**
              * Reverse Lookup Dictionary (Yarnglish -> English)
-             * Multi-word Yarnglish phrases ("byeeeeeeee apapapa", "piep pip", "eepaap pip")
-             * are matched before single-word tokens ("piep", "pip").
+             * Multi-word Yarnglish phrases are matched before single-word tokens.
              */
             const REVERSE_DICTIONARY = {
                 "eeeeeeeeeeeeeeello": "hi",
@@ -713,7 +711,11 @@
                 "poi": "boy",
                 "gipipi": "girl",
                 "eeeeeenglish": "english",
-                "paeeengliish": "yarnglish"
+                "paeeengliish": "yarnglish",
+                "ooooooe": "one",
+                "pops": "two",
+                "pipepepes": "three",
+                "puar": "nonbinary"
             };
 
             // Pre-sorted multi-word Yarnglish keys (longest first) for accurate reverse matching
@@ -758,13 +760,9 @@
 
             /**
              * Translate English -> Yarnglish
-             * Preserves punctuation, spacing, and newlines.
-             * Handles contractions with or without apostrophes (e.g., "I'm" / "im", "you're" / "youre").
              */
             function translateEnglishToYarnglish(text) {
                 let translatedCount = 0;
-
-                // Split into word tokens (including internal apostrophes like I'm or you're) vs non-word separators
                 const tokens = text.split(/([A-Za-z0-9]+(?:'[A-Za-z0-9]+)*)/);
 
                 const result = tokens.map(token => {
@@ -772,7 +770,6 @@
                         return token;
                     }
 
-                    // Normalize lowercase and strip apostrophes so "I'm" -> "im" and "you're" -> "youre"
                     const normalized = token.toLowerCase().replace(/'/g, "");
 
                     if (Object.prototype.hasOwnProperty.call(YARNGLISH_DICTIONARY, normalized)) {
@@ -780,7 +777,6 @@
                         return YARNGLISH_DICTIONARY[normalized];
                     }
 
-                    // Word not in dictionary stays unchanged
                     return token;
                 }).join("");
 
@@ -789,19 +785,14 @@
 
             /**
              * Translate Yarnglish -> English
-             * Matches multi-word Yarnglish expressions first (e.g., "byeeeeeeee apapapa", "piep pip", "eepaap pip"),
-             * then single words while preserving all punctuation and whitespace.
              */
             function translateYarnglishToEnglish(text) {
                 let translatedCount = 0;
-
-                // Protect multi-word Yarnglish phrases with unique indexed placeholders
                 const placeholders = [];
                 let workingText = text;
 
                 MULTI_WORD_YARNGLISH.forEach(phrase => {
                     const escaped = phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-                    // Match whole phrase bounded by start/end or non-word characters
                     const regex = new RegExp(`(^|[^A-Za-z0-9])(${escaped})(?=$|[^A-Za-z0-9])`, "gi");
 
                     workingText = workingText.replace(regex, (match, prefix) => {
@@ -812,13 +803,11 @@
                     });
                 });
 
-                // Process remaining single-word tokens
                 const tokens = workingText.split(/([A-Za-z0-9_]+)/);
 
                 const resolved = tokens.map(token => {
                     if (!token) return token;
 
-                    // Restore multi-word placeholder
                     const phMatch = token.match(/^__YNPH_(\d+)__$/);
                     if (phMatch) {
                         return placeholders[Number(phMatch[1])];
@@ -867,14 +856,14 @@
                     targetLangPill.textContent = "Yarnglish";
                     inputHeaderLabel.textContent = "English Input";
                     outputHeaderLabel.textContent = "Yarnglish Output";
-                    sourceInput.placeholder = "Type here... e.g. Hi, I'm Carl! Are you a boy or a girl? Bye!";
+                    sourceInput.placeholder = "Type here... e.g. One, Two, Three! Are you a boy, girl, or nonbinary?";
                     swapIcon.style.transform = "rotate(0deg)";
                 } else {
                     sourceLangPill.textContent = "Yarnglish";
                     targetLangPill.textContent = "English";
                     inputHeaderLabel.textContent = "Yarnglish Input";
                     outputHeaderLabel.textContent = "English Output";
-                    sourceInput.placeholder = "Type Yarnglish here... e.g. eeeeeeeeeeeeeeello, piep pip popopeeeeeeeeeepa!";
+                    sourceInput.placeholder = "Type Yarnglish here... e.g. ooooooe, pops, pipepepes!";
                     swapIcon.style.transform = "rotate(180deg)";
                 }
             }
@@ -944,7 +933,7 @@
             }
 
             /**
-             * Copy translated result to clipboard (with reliable execCommand fallback)
+             * Copy translated result to clipboard
              */
             function copyResult() {
                 if (!currentRawTranslation.trim()) {
@@ -962,7 +951,6 @@
                     }, 1800);
                 };
 
-                // Fallback helper using hidden textarea & execCommand
                 const fallbackCopy = () => {
                     const tempArea = document.createElement("textarea");
                     tempArea.value = textToCopy;
@@ -1028,4 +1016,3 @@
     </script>
 </body>
 </html>
-```
